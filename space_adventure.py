@@ -1,6 +1,7 @@
 """
 space_adventure.py
 A self-contained 2D arcade-style space shooter using pygame.
+Compatible with pygbag (runs in-browser via WebAssembly).
 
 Features:
 - Player ship (rotation + thrust + inertia)
@@ -14,6 +15,7 @@ Run:
     python space_adventure.py
 """
 
+import asyncio
 import math
 import random
 import sys
@@ -554,13 +556,17 @@ class Game:
 
         pygame.display.flip()
 
-    def run(self):
+    async def run(self):
         while True:
             dt = self.clock.tick(FPS) / 1000.0
             self.update(dt)
             self.draw()
+            await asyncio.sleep(0)  # yield to browser event loop (pygbag)
 
 # ---------- Main ----------
-if __name__ == "__main__":
+async def main():
     game = Game()
-    game.run()
+    await game.run()
+
+if __name__ == "__main__":
+    asyncio.run(main())
