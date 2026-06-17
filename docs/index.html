@@ -1,438 +1,661 @@
-<html lang="en-us"><script src="https://pygame-web.github.io/cdn/0.9.3/pythons.js" type=module id="site" data-python="python3.12" data-LINES=42 data-COLUMNS=132 data-os="vtx,snd,gui" async defer>#<!--
-
-print("""
-Loading space-shooter from space-shooter.apk
-    Pygbag Version : 0.9.3
-    Template Version : 0.9.3
-    Python  : 3.12
-    CDN URL : https://pygame-web.github.io/cdn/0.9.3/
-    Screen  : 1280x720
-    Title   : space-shooter
-    Folder  : space-shooter
-    Authors : pgw
-    SPDX-License-Identifier: cookiecutter.spdx
-
-""")
-
-import sys
-import asyncio
-import platform
-import json
-from pathlib import Path
-
-# do not rename
-async def custom_site():
-    import embed
-    platform.document.body.style.background = "#7f7f7f"
-
-    platform.window.transfer.hidden = true
-    platform.window.canvas.style.visibility = "visible"
-
-
-    bundle = "space-shooter"
-
-    # the C or js loader could do that but be explicit.
-    appdir = Path(f"/data/data/{bundle}") # /data/data/space-shooter
-    appdir.mkdir()
-
-
-    # unpack filesystem from compressed archive into work dir
-    if platform.window.location.host.find('.itch.zone')>0:
-        import zipfile
-        async with platform.fopen("space-shooter.apk", "rb") as archive:
-            with zipfile.ZipFile(archive) as zip_ref:
-                zip_ref.extractall(appdir.as_posix())
-    else:
-        import tarfile
-        async with platform.fopen("space-shooter.tar.gz", "rb") as archive:
-            tar = tarfile.open(fileobj=archive, mode="r:gz")
-            tar.extractall(path=appdir.as_posix(), filter='tar')
-            tar.close()
-
-    # preloader will change to work dir and prepend it to sys.path
-    platform.run_main(PyConfig, loaderhome= appdir / "assets", loadermain=None)
-
-
-    # wait preloading complete : that includes images and wasm compilation of bundled modules
-    while embed.counter()<0:
-        await asyncio.sleep(.1)
-
-    main = appdir / "assets" / "main.py"
-
-    # TODO: test for window.webkitAudioContext and block aio loop until gesture if accessing media manager play
-    # before a gesture is recorded ( touch or click )
-
-    # test/wait user media interaction
-    if not platform.window.MM.UME:
-
-        # now that apk is mounted we have access to font cache
-        # but we need to fill __file__ that is not yet set
-        __import__(__name__).__file__ = main
-
-        # now make a prompt
-        msg  = "Ready to start ! Please click/touch page"
-        platform.window.infobox.innerText = msg
-        print("\n"*4, f"    * Waiting for media user engagement. {msg} *" , "\n"*4)
-
-        while not platform.window.MM.UME:
-            await asyncio.sleep(.1)
-
-    # start async top level machinery if not started and add a console in any case if requested.
-    await TopLevel_async_handler.start_toplevel(platform.shell, console=window.python.config.debug)
-
-    # now that apk is mounted we have access to font cache
-    # but we need to fill __file__/__name__ that are not yet set
-    __import__(__name__).__file__ = main
-
-
-    def ui_callback(pkg):
-        platform.window.infobox.innerText = f"installing {pkg}"
-
-    await shell.source(main, callback=ui_callback)
-
-    # if you don't reach that step
-    # your main.py has an infinite sync loop somewhere !
-
-    platform.window.infobox.style.display = "none"
-    platform.window.config.gui_divider = 1
-    platform.window.window_resize()
-    print("default.tmpl: done")
-
-    shell.interactive()
-
-asyncio.run( custom_site() )
-
-
-
-
-
-
-
-
-
-
-
-
-# BEGIN BLOCK
-#
-# now this is the html part you can (and should) customize
-# It is not mandatory : pygame-script when it reads the first line (also called
-# shebang ) of above code create absolute minimal widget set
-# required for running with default rules
-#
-# do not alter that comment block it is separating python code from html code
-# =============================================================================
-# --></script><head><!--
-//=============================================================================
-//
-//
-//
-//
-//
-//
-//
-
-    {%- if cookiecutter.comment != "" -%}
-{{cookiecutter.comment}}
-    {% endif %}
-
---><script type="application/javascript">
-// END BLOCK
-
-
-
-// this dict is available under PyConfig.config from __main__
-
-config = {
-    xtermjs : "1" ,
-    _sdl2 : "canvas",
-    user_canvas : 0,
-    user_canvas_managed : 0,
-    gui_divider : 2,
-    ume_block : 1,
-    can_close : 0,
-    archive : "space-shooter",
-    gui_debug : 2,
-    cdn : "https://pygame-web.github.io/cdn/0.9.3/",
-    autorun : 0,
-    PYBUILD : "3.12",
-    fb_ar   :  1.77,
-    fb_width : "1280",
-    fb_height : "720"
-}
-
-function show_infobox() {
-    infobox.style.display = "block";
-
-    // Measure box
-    const w = infobox.offsetWidth;
-    const h = infobox.offsetHeight;
-
-    // Center in viewport
-    const left = (window.innerWidth - w) / 2;
-    const top = (window.innerHeight - h) / 2;
-
-    infobox.style.left = left + "px";
-    infobox.style.top = top + "px";
-}
-
-</script>
-
-    <title>space-shooter</title>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="viewport" content="height=device-height, initial-scale=1.0">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes"/>
-
-
-    <link rel="icon" type="image/png" href="favicon.png" sizes="16x16">
-
-    <style>
-        #status {
-            display: inline-block;
-            vertical-align: top;
-            margin-top: 20px;
-            margin-left: 30px;
-            font-weight: bold;
-            color: rgb(120, 120, 120);
-        }
-
-        #progress {
-            height: 20px;
-            width: 300px;
-        }
-
-        #infobox {
-            position: fixed; /* center relative to viewport */
-            background: green;
-            color: blue;
-            font-weight: bold;
-            padding: 12px 24px;
- /*           display: none; */
-            z-index: 999999;
-        }
-        div.emscripten { text-align: center; }
-        div.emscripten_border { border: 1px solid black; }
-        div.thick_border { border: 4px solid black; }
-
-        /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
-        /* average size of droid screen 470dp x 320dp  */
-        canvas.emscripten {
-            border: 0px none;
-            background-color: transparent;
-            width: 100%;
-            height: 100%;
-            z-index: 5;
-
-            padding: 0;
-            margin: 0 auto;
-
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
-
-        body {
-            font-family: arial;
-            margin: 0;
-            padding: none;
-            background-color:powderblue;
-        }
-
-        .topright{
-           position:absolute;
-           top:0px;
-           right:0px;
-        }
-
-        .bottomright {
-            position:absolute;
-            top: 40%;
-            right: 0px;
-        }
-
-        .center {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .trinfo{
-           position: relative;
-           right: 0px;
-           border: 1px solid black;
-        }
-
-        .framed{
-           position: relative;
-           top: 150px;
-           right: 10px;
-           border: 1px solid black;
-        }
-    </style>
-
-    <script>
-/*
-        if (navigator.serviceWorker)
-            navigator.serviceWorker.register("https://pygame-web.github.io/cdn/0.9.3/pygbag0.9.3.js")
-        else
-            console.warn("Service workers not supported")
-*/
-    </script>
-
-    <script src="https://pygame-web.github.io/cdn/0.9.3//browserfs.min.js"></script>
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Shooter · expediator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #06080f;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+    user-select: none;
+  }
+  #gameCanvas {
+    border: 1px solid #1a2040;
+    display: block;
+    max-width: 98vw;
+    touch-action: none;
+  }
+  #ui {
+    color: #6a7a99;
+    font-size: .72rem;
+    margin-top: 8px;
+    text-align: center;
+  }
+  #ui a { color: #3b9eff; text-decoration: none; }
+  #ui a:hover { text-decoration: underline; }
+</style>
 </head>
-
 <body>
+<canvas id="gameCanvas" width="900" height="580"></canvas>
+<div id="ui">
+  WASD / Arrows = move &nbsp;·&nbsp; SPACE / click = shoot &nbsp;·&nbsp; P = pause &nbsp;·&nbsp; R = restart
+  &nbsp;&nbsp;|&nbsp;&nbsp;
+  <a href="https://github.com/expediator/space-shooter" target="_blank">GitHub →</a>
+  &nbsp;·&nbsp;
+  <a href="https://expediator.github.io/resume/" target="_blank">Portfolio →</a>
+</div>
 
-    <div id="transfer" align=center>
-<!--        <div class="spinner" id='spinner'></div> -->
-        <div class="emscripten" id="status">Downloading...</div>
-        <div class="emscripten">
-            <progress value="0" max="100" id="progress"></progress>
-        </div>
-    </div>
+<script>
+// ─── Canvas / constants ──────────────────────────────────────────
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
 
+const PLAYER_MAX_SPEED = 5.5;
+const PLAYER_ACCEL     = 0.22;
+const PLAYER_DAMPING   = 0.985;
+const ROT_SPEED        = 4.2;
+const BULLET_SPEED     = 700;   // px/s
+const BULLET_LIFE      = 1.6;   // seconds
+const BASE_SPAWN_INT   = 2.0;
 
+// ─── Utilities ───────────────────────────────────────────────────
+function rand(a, b) { return Math.random() * (b - a) + a; }
+function randInt(a, b) { return Math.floor(rand(a, b + 1)); }
+function clamp(x, lo, hi) { return Math.max(lo, Math.min(hi, x)); }
+function deg2rad(d) { return d * Math.PI / 180; }
+function vecAngle(deg) { const r = deg2rad(deg); return { x: Math.cos(r), y: Math.sin(r) }; }
+function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
 
-    <canvas class="emscripten" id="canvas"
-width="1px"
-height="1px"
-    oncontextmenu="event.preventDefault()" tabindex=1>
-    </canvas>
+// ─── Stars (static background) ───────────────────────────────────
+const STARS = Array.from({ length: 100 }, () => ({
+  x: rand(0, W), y: rand(0, H), r: rand(0.4, 1.6), a: rand(0.08, 0.55)
+}));
 
-    <canvas class="emscripten" id="canvas3d"
-width="1280px"
-height="720px"
-    oncontextmenu="event.preventDefault()" tabindex=1 hidden>
-    </canvas>
+// ─── Particle ────────────────────────────────────────────────────
+class Particle {
+  constructor(x, y, color) {
+    const spd = rand(40, 180);
+    const a   = rand(0, 360);
+    const v   = vecAngle(a);
+    this.x = x; this.y = y;
+    this.vx = v.x * spd; this.vy = v.y * spd;
+    this.r  = rand(1.5, 4.5);
+    this.life = rand(0.4, 0.9);
+    this.age  = 0;
+    this.color = color || '#ff9020';
+  }
+  update(dt) {
+    this.age += dt;
+    this.x += this.vx * dt; this.y += this.vy * dt;
+    this.vx *= 0.97; this.vy *= 0.97;
+  }
+  get alive() { return this.age < this.life; }
+  draw() {
+    const t = 1 - this.age / this.life;
+    ctx.save();
+    ctx.globalAlpha = t * 0.9;
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r * t, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+}
 
-    <div id="infobox">Loading, please wait ...</div>
+// ─── Bullet ──────────────────────────────────────────────────────
+class Bullet {
+  constructor(x, y, vx, vy, owner) {
+    this.x = x; this.y = y;
+    this.vx = vx; this.vy = vy;
+    this.owner = owner;
+    this.r = owner === 'player' ? 3 : 5;
+    this.born = performance.now() / 1000;
+  }
+  update(dt) { this.x += this.vx * dt; this.y += this.vy * dt; }
+  get alive() {
+    const age = performance.now() / 1000 - this.born;
+    return age < BULLET_LIFE && this.x > -30 && this.x < W + 30 && this.y > -30 && this.y < H + 30;
+  }
+  draw() {
+    ctx.fillStyle = this.owner === 'player' ? '#50ff70' : '#ff4040';
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fill();
+    if (this.owner === 'player') {
+      ctx.save();
+      ctx.shadowColor = '#50ff70'; ctx.shadowBlur = 6;
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+}
 
-    <div id=html></div>
+// ─── Player ──────────────────────────────────────────────────────
+class Player {
+  constructor() {
+    this.x = W / 2; this.y = H / 2;
+    this.vx = 0; this.vy = 0;
+    this.angle = -90;
+    this.r = 18;
+    this.hp = 100; this.maxHp = 100;
+    this.lives = 3;
+    this.lastShot = 0; this.fireDelay = 0.22;
+    this.rapidTime = 0; this.shieldTime = 0;
+    this.invulTime = 0;
+    this.thrustParticleTimer = 0;
+  }
 
-    <div id=crt  class=bottomright >
+  update(dt, keys, particles) {
+    if (keys['ArrowLeft'] || keys['a'] || keys['A']) this.angle -= ROT_SPEED;
+    if (keys['ArrowRight'] || keys['d'] || keys['D']) this.angle += ROT_SPEED;
 
-        <div id="system" hidden>
-            <div class="button-container">
-                <button id="aiostop" disabled>AIO ⏏︎</button>
-                <button id="aiopaused_true" disabled>AIO ■</button>
-                <button id="aiopaused_false" disabled>AIO ▶</button>
-                <button id="pygame_mixer_music_pause" disabled>Music ■</button>
-            </div>
-
-            <div class="button-container">
-                <div id=load_min>min</div>
-                <div id=load_avg>avg</div>
-                <div id=load_max>max</div>
-              <button id="load_rst" disabled>RESET</button>
-            </div>
-
-            <div id="level">(battery level unknown)</div>
-            <div id="stateBattery">(charging state unknown)</div>
-
-        </div>
-
-        <div id=box class="emscripten_border" hidden=true>
-
-            <div id="info" class="trinfo"></div>
-
-            <iframe id="iframe" class="framed" name="iframe"
-width="470px" height="90%"
-allowtransparency="true"
-style="z-index: 10;"
-style="background: #FFFFFF;"
-frameborder="1"
-                allowfullscreen="true"
-                webkitallowfullscreen="true"
-                msallowfullscreen="true"
-                mozallowfullscreen="true"
-                sandbox="allow-same-origin allow-top-navigation allow-scripts allow-pointer-lock"
-                allow="autoplay; fullscreen *; geolocation; microphone; camera; midi; monetization; xr-spatial-tracking; gamepad; gyroscope; accelerometer; xr; cross-origin-isolated"
-                src="https://pygame-web.github.io/cdn/0.9.3/empty.html"
-                scrolling="yes">
-            </iframe>
-        </div>
-
-    </div>
-
-
-    <div id="dlg" hidden>
-        <input type="file" id="dlg_multifile" multiple accept="image/*">
-        <label for="dlg_multifile">Select files</label>
-    </div>
-
-    <div id="pyconsole">
-        <div id="terminal" tabIndex=1 align="left"></div>
-    </div>
-
-    <script type="application/javascript">
-
-    globalThis.__canvas_resized = (self, ecw, ech) => {
-        console.warn("TODO: panda3d canvas monitor", self, ecw, ech)
+    const thrusting = keys['ArrowUp'] || keys['w'] || keys['W'];
+    if (thrusting) {
+      const v = vecAngle(this.angle);
+      this.vx += v.x * PLAYER_ACCEL;
+      this.vy += v.y * PLAYER_ACCEL;
+      // Thrust exhaust
+      this.thrustParticleTimer -= dt;
+      if (this.thrustParticleTimer <= 0) {
+        this.thrustParticleTimer = 0.05;
+        const back = vecAngle(this.angle + 180);
+        const p = new Particle(
+          this.x + back.x * 20 + rand(-4, 4),
+          this.y + back.y * 20 + rand(-4, 4),
+          Math.random() < 0.5 ? '#ff8030' : '#ffcc40'
+        );
+        p.life = 0.25; p.r = rand(2, 4);
+        particles.push(p);
+      }
+    }
+    if (keys['ArrowDown'] || keys['s'] || keys['S']) {
+      this.vx *= 0.93; this.vy *= 0.93;
     }
 
-    async function custom_onload(debug_hidden) {
-        // this is called before anything python is loaded
-        // make your js customization here
-        console.log(__FILE__, "custom_onload")
+    this.vx *= PLAYER_DAMPING; this.vy *= PLAYER_DAMPING;
 
-        pyconsole.hidden = debug_hidden
-        system.hidden = debug_hidden
-        transfer.hidden = debug_hidden
-        info.hidden = debug_hidden
-        box.hidden =  debug_hidden
-
-        show_infobox()
+    const spd = Math.hypot(this.vx, this.vy);
+    if (spd > PLAYER_MAX_SPEED) {
+      const f = PLAYER_MAX_SPEED / spd;
+      this.vx *= f; this.vy *= f;
     }
 
-    function custom_prerun(){
-        // no python main and no (MEMFS + VFS) yet.
-        console.log(__FILE__, "custom_prerun")
+    this.x += this.vx; this.y += this.vy;
+    // Wrap
+    if (this.x < -this.r) this.x = W + this.r;
+    if (this.x > W + this.r) this.x = -this.r;
+    if (this.y < -this.r) this.y = H + this.r;
+    if (this.y > H + this.r) this.y = -this.r;
 
+    if (this.rapidTime > 0) { this.rapidTime = Math.max(0, this.rapidTime - dt); this.fireDelay = 0.08; }
+    else this.fireDelay = 0.22;
+    if (this.shieldTime > 0) this.shieldTime = Math.max(0, this.shieldTime - dt);
+    if (this.invulTime > 0) this.invulTime = Math.max(0, this.invulTime - dt);
+  }
+
+  draw() {
+    const blink = this.invulTime > 0 && Math.floor(this.invulTime * 8) % 2 === 0;
+    if (blink) return;
+
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(deg2rad(this.angle));
+
+    // Shield
+    if (this.shieldTime > 0) {
+      const sr = this.r + 8 + 3 * Math.sin(performance.now() / 90);
+      ctx.beginPath();
+      ctx.arc(0, 0, sr, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(80,180,255,${0.35 + 0.2 * Math.sin(performance.now() / 60)})`;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
     }
 
-    function custom_postrun(){
-        // python main and no VFS filesystem yet.
-        console.log(__FILE__, "custom_postrun")
+    // Ship body
+    ctx.beginPath();
+    ctx.moveTo(22, 0);
+    ctx.lineTo(-14, -13);
+    ctx.lineTo(-9, 0);
+    ctx.lineTo(-14, 13);
+    ctx.closePath();
+    ctx.fillStyle = '#a8d8ff';
+    ctx.fill();
+    ctx.strokeStyle = '#12274a';
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
 
+    // Cockpit
+    ctx.beginPath();
+    ctx.ellipse(6, 0, 6, 4, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#3b9eff';
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  tryShoot(now, bullets) {
+    if (now - this.lastShot < this.fireDelay) return;
+    this.lastShot = now;
+    const v = vecAngle(this.angle);
+    bullets.push(new Bullet(
+      this.x + v.x * 24, this.y + v.y * 24,
+      v.x * BULLET_SPEED + this.vx * 60,
+      v.y * BULLET_SPEED + this.vy * 60,
+      'player'
+    ));
+  }
+}
+
+// ─── Enemy ───────────────────────────────────────────────────────
+class Enemy {
+  constructor(x, y, type) {
+    this.x = x; this.y = y;
+    this.type = type || 'basic';
+    this.r = type === 'big' ? 22 : 14;
+    this.hp = type === 'big' ? 50 : 22;
+    this.maxHp = this.hp;
+    this.vx = 0; this.vy = 0;
+    this.wanderTimer = rand(0.4, 1.5);
+    this.angle = rand(0, 360);
+    this.spinSpeed = rand(-60, 60);
+  }
+
+  update(dt, px, py) {
+    this.angle += this.spinSpeed * dt;
+
+    if (this.type === 'basic') {
+      // Seek player
+      const dx = px - this.x, dy = py - this.y, d = Math.hypot(dx, dy) || 1;
+      const maxSpd = 1.4;
+      this.vx += (dx / d) * 0.8 * dt;
+      this.vy += (dy / d) * 0.8 * dt;
+      const spd = Math.hypot(this.vx, this.vy);
+      if (spd > maxSpd) { const f = maxSpd / spd; this.vx *= f; this.vy *= f; }
+    } else {
+      // Wander + occasional dash
+      this.wanderTimer -= dt;
+      if (this.wanderTimer <= 0) {
+        this.wanderTimer = rand(0.6, 2.2);
+        const v = vecAngle(rand(0, 360));
+        const sp = rand(0.5, 1.5);
+        this.vx = v.x * sp; this.vy = v.y * sp;
+      }
+      // Random dash toward player
+      if (Math.random() < 0.003) {
+        const dx = px - this.x, dy = py - this.y, d = Math.hypot(dx, dy) || 1;
+        this.vx = (dx / d) * 3.5; this.vy = (dy / d) * 3.5;
+      }
+      this.vx *= 0.985; this.vy *= 0.985;
     }
 
-    function debug() {
-        // allow to gain access to dev tools from js console
-        // but only on desktop. difficult to reach when in iframe
-        python.config.debug = true
-        custom_onload(false)
-        Module.PyRun_SimpleString("shell.uptime()")
-        window_resize()
+    this.x += this.vx; this.y += this.vy;
+    // Bounce off edges
+    if (this.x < this.r) { this.x = this.r; this.vx = Math.abs(this.vx); }
+    if (this.x > W - this.r) { this.x = W - this.r; this.vx = -Math.abs(this.vx); }
+    if (this.y < this.r) { this.y = this.r; this.vy = Math.abs(this.vy); }
+    if (this.y > H - this.r) { this.y = H - this.r; this.vy = -Math.abs(this.vy); }
+  }
+
+  draw() {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.rotate(deg2rad(this.angle));
+
+    if (this.type === 'basic') {
+      // Red circle with cross hatch
+      ctx.beginPath();
+      ctx.arc(0, 0, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = '#c03030';
+      ctx.fill();
+      ctx.strokeStyle = '#6a1a1a';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,100,100,.4)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(-this.r, 0); ctx.lineTo(this.r, 0);
+      ctx.moveTo(0, -this.r); ctx.lineTo(0, this.r);
+      ctx.stroke();
+    } else {
+      // Orange star / big enemy
+      const spikes = 8;
+      ctx.beginPath();
+      for (let i = 0; i < spikes * 2; i++) {
+        const r2 = i % 2 === 0 ? this.r : this.r - 9;
+        const a = (i / (spikes * 2)) * Math.PI * 2;
+        if (i === 0) ctx.moveTo(Math.cos(a) * r2, Math.sin(a) * r2);
+        else ctx.lineTo(Math.cos(a) * r2, Math.sin(a) * r2);
+      }
+      ctx.closePath();
+      ctx.fillStyle = '#c06010';
+      ctx.fill();
+      ctx.strokeStyle = '#5a2e05';
+      ctx.lineWidth = 2;
+      ctx.stroke();
     }
 
-    function info_inline(data){
-        document.getElementById("info").innerHTML = data
+    // HP bar above
+    if (this.hp < this.maxHp) {
+      const bw = this.r * 2.4, bx = -bw / 2, by = -this.r - 10;
+      ctx.fillStyle = '#1a1a2a';
+      ctx.fillRect(bx, by, bw, 5);
+      ctx.fillStyle = this.type === 'big' ? '#ff8030' : '#ff4040';
+      ctx.fillRect(bx, by, bw * (this.hp / this.maxHp), 5);
     }
 
-    function info_online(url) {
-        // display info about current APK
-        fetch( url /*, options */)
-            .then((response) => response.text())
-            .then((html) => {
-                info_inline(html);
-        })
-        .catch((error) => {
-            console.warn(error);
-        });
+    ctx.restore();
+  }
+}
+
+// ─── Power-up ─────────────────────────────────────────────────────
+class PowerUp {
+  constructor(x, y, type) {
+    this.x = x; this.y = y;
+    this.type = type; // 'rapid' | 'shield'
+    this.r = 11;
+    this.born = performance.now() / 1000;
+  }
+  get alive() { return (performance.now() / 1000 - this.born) < 12; }
+  draw() {
+    const pulse = 1 + 0.12 * Math.sin(performance.now() / 200);
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.scale(pulse, pulse);
+    ctx.beginPath();
+    ctx.arc(0, 0, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = this.type === 'rapid' ? '#30c880' : '#5080ff';
+    ctx.fill();
+    ctx.strokeStyle = '#101428';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(this.type === 'rapid' ? 'R' : 'S', 0, 0);
+    ctx.restore();
+  }
+}
+
+// ─── Game ─────────────────────────────────────────────────────────
+class Game {
+  constructor() {
+    this.player    = new Player();
+    this.bullets   = [];
+    this.enemies   = [];
+    this.particles = [];
+    this.powerups  = [];
+    this.score     = 0;
+    this.level     = 1;
+    this.killCount = 0;
+    this.killsNeeded = 6;
+    this.spawnTimer = 1.0;
+    this.spawnInterval = BASE_SPAWN_INT;
+    this.enemyShootTimer = 0;
+    this.paused = false;
+    this.over   = false;
+    this.showLevelUp = 0;
+  }
+
+  explode(x, y, n, color) {
+    for (let i = 0; i < n; i++) this.particles.push(new Particle(x, y, color));
+  }
+
+  spawnEnemy() {
+    const side = randInt(0, 3);
+    let x, y;
+    if (side === 0) { x = rand(0, W); y = -30; }
+    else if (side === 1) { x = rand(0, W); y = H + 30; }
+    else if (side === 2) { x = -30; y = rand(0, H); }
+    else { x = W + 30; y = rand(0, H); }
+    const big = Math.random() < (0.18 + this.level * 0.04);
+    this.enemies.push(new Enemy(x, y, big ? 'big' : 'basic'));
+  }
+
+  spawnPowerup(x, y) {
+    this.powerups.push(new PowerUp(x, y, Math.random() < 0.5 ? 'rapid' : 'shield'));
+  }
+
+  update(dt, keys, shooting, nowSec) {
+    if (this.paused || this.over) return;
+
+    const p = this.player;
+    p.update(dt, keys, this.particles);
+    if (shooting) p.tryShoot(nowSec, this.bullets);
+
+    this.enemies.forEach(e => e.update(dt, p.x, p.y));
+    this.bullets.forEach(b => b.update(dt));
+    this.particles.forEach(pt => pt.update(dt));
+    this.powerups = this.powerups.filter(pu => pu.alive);
+
+    // Bullets dead
+    this.bullets   = this.bullets.filter(b => b.alive);
+    this.particles = this.particles.filter(pt => pt.alive);
+
+    // Powerup pickup
+    this.powerups = this.powerups.filter(pu => {
+      if (dist(pu, p) < pu.r + p.r) {
+        if (pu.type === 'rapid') p.rapidTime = 7;
+        else p.shieldTime = Math.max(p.shieldTime, 6);
+        this.explode(pu.x, pu.y, 8, pu.type === 'rapid' ? '#40ffa0' : '#6090ff');
+        return false;
+      }
+      return true;
+    });
+
+    // Player bullet → enemy
+    for (let bi = this.bullets.length - 1; bi >= 0; bi--) {
+      const b = this.bullets[bi];
+      if (b.owner !== 'player') continue;
+      for (let ei = this.enemies.length - 1; ei >= 0; ei--) {
+        const e = this.enemies[ei];
+        if (dist(b, e) < b.r + e.r) {
+          e.hp -= 22;
+          this.explode(b.x, b.y, 5);
+          this.bullets.splice(bi, 1);
+          if (e.hp <= 0) {
+            this.score += e.type === 'big' ? 250 : 100;
+            this.killCount++;
+            this.explode(e.x, e.y, e.type === 'big' ? 22 : 12, e.type === 'big' ? '#ff8030' : '#ff5050');
+            if (Math.random() < 0.15) this.spawnPowerup(e.x, e.y);
+            this.enemies.splice(ei, 1);
+          }
+          break;
+        }
+      }
     }
 
-    function frame_online(url) {
-        window.frames["iframe"].location = url;
+    // Enemy bullet → player
+    for (let bi = this.bullets.length - 1; bi >= 0; bi--) {
+      const b = this.bullets[bi];
+      if (b.owner !== 'enemy') continue;
+      if (dist(b, p) < b.r + p.r) {
+        this.bullets.splice(bi, 1);
+        if (p.shieldTime > 0) { p.shieldTime = Math.max(0, p.shieldTime - 0.8); this.explode(b.x, b.y, 6, '#6090ff'); }
+        else if (p.invulTime <= 0) {
+          p.hp -= 12;
+          this.explode(b.x, b.y, 6);
+        }
+      }
     }
 
-    </script>
+    // Enemy → player collision
+    for (let ei = this.enemies.length - 1; ei >= 0; ei--) {
+      const e = this.enemies[ei];
+      if (dist(e, p) < e.r + p.r) {
+        if (p.shieldTime > 0) { p.shieldTime = Math.max(0, p.shieldTime - 1.5); }
+        else if (p.invulTime <= 0) { p.hp -= e.type === 'big' ? 30 : 20; }
+        const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1;
+        p.x += (dx / d) * 10; p.y += (dy / d) * 10;
+        this.explode(e.x, e.y, 8);
+        if (Math.random() < 0.25) { this.score += 60; this.enemies.splice(ei, 1); this.explode(e.x, e.y, 12, '#ff7030'); }
+      }
+    }
 
+    // Big enemy shooting
+    this.enemyShootTimer -= dt;
+    if (this.enemyShootTimer <= 0) {
+      this.enemyShootTimer = Math.max(0.5, 1.4 - this.level * 0.06);
+      const bigs = this.enemies.filter(e => e.type === 'big');
+      bigs.forEach(e => {
+        const dx = p.x - e.x, dy = p.y - e.y, d = Math.hypot(dx, dy) || 1;
+        const sp = 240 + this.level * 10;
+        this.bullets.push(new Bullet(e.x + dx / d * (e.r + 6), e.y + dy / d * (e.r + 6), (dx / d) * sp, (dy / d) * sp, 'enemy'));
+      });
+    }
+
+    // Player death
+    if (p.hp <= 0 && p.invulTime <= 0) {
+      p.lives--;
+      this.explode(p.x, p.y, 35, '#ff6040');
+      if (p.lives <= 0) { this.over = true; return; }
+      p.hp = p.maxHp;
+      p.x = W / 2; p.y = H / 2; p.vx = 0; p.vy = 0;
+      p.shieldTime = 3; p.invulTime = 3;
+    }
+
+    // Level up
+    if (this.killCount >= this.killsNeeded && this.enemies.length === 0) {
+      this.level++;
+      this.killCount = 0;
+      this.killsNeeded = 5 + this.level * 2;
+      this.spawnInterval = Math.max(0.55, BASE_SPAWN_INT - this.level * 0.1);
+      this.showLevelUp = 2.5;
+    }
+
+    if (this.showLevelUp > 0) this.showLevelUp -= dt;
+
+    // Spawn enemies
+    this.spawnTimer -= dt;
+    if (this.spawnTimer <= 0 && this.enemies.length < 8 + this.level) {
+      this.spawnEnemy();
+      this.spawnTimer = this.spawnInterval;
+    }
+
+    // Random powerup drop
+    if (Math.random() < 0.003) this.spawnPowerup(rand(50, W - 50), rand(50, H - 50));
+  }
+
+  draw() {
+    // Sky
+    ctx.fillStyle = '#06080f';
+    ctx.fillRect(0, 0, W, H);
+
+    // Stars
+    STARS.forEach(s => {
+      ctx.globalAlpha = s.a;
+      ctx.fillStyle = '#b8c8f8';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    this.particles.forEach(p => p.draw());
+    this.powerups.forEach(pu => pu.draw());
+    this.enemies.forEach(e => e.draw());
+    this.bullets.forEach(b => b.draw());
+    this.player.draw();
+
+    this.drawHUD();
+
+    if (this.showLevelUp > 0) this.drawCentered(`LEVEL ${this.level}`, '#ffcc40', 34);
+    if (this.paused) this.drawCentered('PAUSED', '#c8d8f0', 36);
+    if (this.over) {
+      this.drawCentered('GAME OVER', '#ff6060', 40);
+      this.drawSub(`Score: ${this.score}  ·  Level: ${this.level}`, '#aaa', H / 2 + 36);
+      this.drawSub('Press R to restart', '#6a7a99', H / 2 + 60);
+    }
+  }
+
+  drawHUD() {
+    // Score / level
+    ctx.fillStyle = '#8ab8e8';
+    ctx.font = '15px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(`Score: ${this.score}`, 10, 10);
+    ctx.fillText(`Level: ${this.level}`, 10, 30);
+
+    // Lives
+    ctx.textAlign = 'right';
+    ctx.fillText(`Lives: ${'♥ '.repeat(this.player.lives).trim()}`, W - 10, 10);
+
+    // HP bar
+    const bw = 200, bx = (W - bw) / 2, by = 10;
+    ctx.fillStyle = '#12192a';
+    ctx.fillRect(bx, by, bw, 16);
+    const ratio = clamp(this.player.hp / this.player.maxHp, 0, 1);
+    ctx.fillStyle = ratio > 0.5 ? '#40c860' : ratio > 0.25 ? '#e0a020' : '#e83030';
+    ctx.fillRect(bx + 1, by + 1, (bw - 2) * ratio, 14);
+    ctx.fillStyle = '#fff';
+    ctx.font = '10px "Segoe UI Mono", monospace';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(`HP ${Math.max(0, Math.ceil(this.player.hp))}`, W / 2, by + 8);
+
+    // Powerup timers
+    ctx.font = '13px "Segoe UI", sans-serif';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'bottom';
+    let py = H - 10;
+    if (this.player.shieldTime > 0) {
+      ctx.fillStyle = '#6090ff';
+      ctx.fillText(`Shield ${this.player.shieldTime.toFixed(1)}s`, 10, py);
+      py -= 20;
+    }
+    if (this.player.rapidTime > 0) {
+      ctx.fillStyle = '#40c880';
+      ctx.fillText(`Rapid Fire ${this.player.rapidTime.toFixed(1)}s`, 10, py);
+    }
+  }
+
+  drawCentered(text, color, size) {
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.font = `bold ${size}px "Segoe UI", sans-serif`;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.shadowColor = color; ctx.shadowBlur = 20;
+    ctx.fillText(text, W / 2, H / 2 - 4);
+    ctx.restore();
+  }
+
+  drawSub(text, color, y) {
+    ctx.fillStyle = color;
+    ctx.font = '17px "Segoe UI", sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    ctx.fillText(text, W / 2, y);
+  }
+}
+
+// ─── Input ────────────────────────────────────────────────────────
+const keys = {};
+let mouseDown = false;
+
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key === ' ') e.preventDefault();
+});
+document.addEventListener('keyup', e => { keys[e.key] = false; });
+canvas.addEventListener('mousedown', () => { mouseDown = true; });
+canvas.addEventListener('mouseup', () => { mouseDown = false; });
+
+// Touch support
+let touchActive = false;
+canvas.addEventListener('touchstart', e => { touchActive = true; e.preventDefault(); }, { passive: false });
+canvas.addEventListener('touchend', () => { touchActive = false; });
+
+// ─── Game loop ────────────────────────────────────────────────────
+let game = new Game();
+let lastTime = performance.now();
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'p' || e.key === 'P') { if (!game.over) game.paused = !game.paused; }
+  if ((e.key === 'r' || e.key === 'R') && game.over) { game = new Game(); lastTime = performance.now(); }
+});
+
+function loop(now) {
+  const dt = Math.min((now - lastTime) / 1000, 0.05);
+  lastTime = now;
+  game.update(dt, keys, mouseDown || touchActive || keys[' '], now / 1000);
+  game.draw();
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+</script>
 </body>
 </html>
